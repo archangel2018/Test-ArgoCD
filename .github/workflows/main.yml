@@ -27,15 +27,15 @@ jobs:
         uses: azure/k8s-create-secret@v4
         with:
            namespace: 'default'
+           secret-type: data
            secret-name: 'mysql-app-credentials-ga'
-           username: ${{ secrets.mysql_app_username }}
-           password: ${{ secrets.mysql_app_password }}
+           data: ${{ secrets.mysql_app_creds }}
       - name: Set MYSQL App Secrets
         uses: azure/k8s-create-secret@v4
         with:
            namespace: 'default'
+           secret-type: data
            secret-name: 'mysql-root-credentials-ga'
-           username: ${{ secrets.mysql_root_username }}
-           password: ${{ secrets.mysql_root_password }}
+           data: ${{ secrets.mysql_root_creds }}
       - name: Deploy
         run: kubectl apply -f  guestbook-githubactions/main.yml
