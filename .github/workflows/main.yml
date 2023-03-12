@@ -8,6 +8,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+    #   - name: Configure kubectl
+    #     uses: aws-actions/configure-aws-credentials@v1
+    #     with:
+    #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    #       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    #       aws-region: ca-central-1
       - name: Install kubectl
         run: |
           sudo apt-get update
@@ -16,6 +22,7 @@ jobs:
           sudo echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
           sudo apt-get update
           sudo apt-get install -y kubectl
+          echo ${{ secrets.KUBECONFIG }} | base64 --decode > kubeconfig.yaml
       - name: Set MYSQL Root Secrets
         uses: azure/k8s-create-secret@v4
         with:
@@ -30,8 +37,5 @@ jobs:
            secret-name: 'mysql-root-credentials'
            username: ${{ secrets.mysql_root_username }}
            password: ${{ secrets.mysql_root_password }}
-      - name: Deploy to EKS
-        uses: appleboy/kubectl-action@master
-        with:
-          args: apply -f guestbook-githubactions/main.yml
-          kubeconfig: ${{ secrets.KUBECONFIG }}
+      - name: Deploy
+        run: kubectl apply -f  guestbook-githubactions/main.yml
