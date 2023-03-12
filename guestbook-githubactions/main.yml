@@ -42,12 +42,12 @@ spec:
             - name: MYSQL_USER
               valueFrom:
                 secretKeyRef:
-                  name: mysql-app-credentials
+                  name: mysql-app-credentials-ga
                   key: username
             - name: MYSQL_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: mysql-app-credentials
+                  name: mysql-app-credentials-ga
                   key: password
             - name: FLASK_APP
               value: application
@@ -62,22 +62,22 @@ spec:
             - name: MYSQL_USER
               valueFrom:
                 secretKeyRef:
-                  name: mysql-app-credentials
+                  name: mysql-app-credentials-ga
                   key: username
             - name: MYSQL_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: mysql-app-credentials
+                  name: mysql-app-credentials-ga
                   key: password
             - name: MYSQL_ROOT_USER
               valueFrom:
                 secretKeyRef:
-                  name: mysql-root-credentials
+                  name: mysql-root-credentials-ga
                   key: username
             - name: MYSQL_ROOT_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: mysql-root-credentials
+                  name: mysql-root-credentials-ga
                   key: password
             - name: MYSQL_DATABASE
               value: guestbook
