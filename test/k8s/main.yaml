@@ -99,6 +99,8 @@ spec:
                   key: password
             - name: MYSQL_DATABASE
               value: guestbook
+            - name: MYSQL_HOST
+              value: mysqlcluster.default.svc.cluster.local
 ---
 apiVersion: v1
 kind: Service
