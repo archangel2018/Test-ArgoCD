@@ -73,7 +73,7 @@ spec:
               value: guestbook
             - name: MYSQL_HOST
               value: mysqlcluster.default.svc.cluster.local
-        initContainers:
+      initContainers:
         - name: db-script
           image: archangel91/init-db:latest
           env:
