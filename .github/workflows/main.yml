@@ -16,25 +16,22 @@ jobs:
     #       aws-region: ca-central-1
       - name: Install kubectl
         run: |
-          sudo apt-get update
-          sudo apt-get install -y apt-transport-https
-          sudo curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
-          sudo echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
-          sudo apt-get update
-          sudo apt-get install -y kubectl
+          curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.22.17/2023-01-30/bin/linux/amd64/kubectl
+          chmod +x ./kubectl
+          sudo mv kubectl /bin/
           echo ${{ secrets.KUBECONFIG }} | base64 --decode > kubeconfig.yaml
       - name: Set MYSQL Root Secrets
         uses: azure/k8s-create-secret@v4
         with:
            namespace: 'default'
-           secret-name: 'mysql-app-credentials'
+           secret-name: 'mysql-app-credentials-ga'
            username: ${{ secrets.mysql_app_username }}
            password: ${{ secrets.mysql_app_password }}
       - name: Set MYSQL App Secrets
         uses: azure/k8s-create-secret@v4
         with:
            namespace: 'default'
-           secret-name: 'mysql-root-credentials'
+           secret-name: 'mysql-root-credentials-ga'
            username: ${{ secrets.mysql_root_username }}
            password: ${{ secrets.mysql_root_password }}
       - name: Deploy
