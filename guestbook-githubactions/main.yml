@@ -1,98 +1,38 @@
----
-apiVersion: autoscaling/v2beta1
-kind: HorizontalPodAutoscaler
-metadata:
-  name: guestbook-app-hpa
-spec:
-  scaleTargetRef:
-    apiVersion: apps/v1
-    kind: Deployment
-    name: guestbook-app-deployment
-  minReplicas: 1
-  maxReplicas: 10
-  metrics:
-    - type: Resource
-      resource:
-        name: cpu 
-        targetAverageUtilization: 80
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: guestbook-app-deployment
-  labels:
-    app: guestbook-app
-spec:
-  replicas: 3
-  selector:
-    matchLabels:
-      app: guestbook-app
-  template:
-    metadata:
-      labels:
-        app: guestbook-app
-    spec:
-      containers:
-        - name: guestbook-app
-          image: ruanbekker/flask-mysql-guestbook:nunito
-          imagePullPolicy: Always
-          ports:
-            - containerPort: 5000
-          env:
-            - name: MYSQL_USER
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-app-credentials-ga
-                  key: username
-            - name: MYSQL_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-app-credentials-ga
-                  key: password
-            - name: FLASK_APP
-              value: application
-            - name: MYSQL_DATABASE
-              value: guestbook
-            - name: MYSQL_HOST
-              value: mysqlcluster.default.svc.cluster.local
-      initContainers:
-        - name: db-script
-          image: archangel91/init-db:latest
-          env:
-            - name: MYSQL_USER
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-app-credentials-ga
-                  key: username
-            - name: MYSQL_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-app-credentials-ga
-                  key: password
-            - name: MYSQL_ROOT_USER
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-root-credentials-ga
-                  key: username
-            - name: MYSQL_ROOT_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: mysql-root-credentials-ga
-                  key: password
-            - name: MYSQL_DATABASE
-              value: guestbook
-            - name: MYSQL_HOST
-              value: mysqlcluster.default.svc.cluster.local
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: flask-service
-spec:
-  ports:
-  - port: 80
-    protocol: TCP
-    targetPort: 5000
-  selector:
-    app: guestbook-app
-  type: LoadBalancer
+name: Deploy to EKS
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+    #   - name: Configure kubectl
+    #     uses: aws-actions/configure-aws-credentials@v1
+    #     with:
+    #       aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+    #       aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    #       aws-region: ca-central-1
+      - name: Install kubectl
+        run: |
+          curl -O https://s3.us-west-2.amazonaws.com/amazon-eks/1.22.17/2023-01-30/bin/linux/amd64/kubectl
+          chmod +x ./kubectl
+          sudo mv kubectl /bin/
+          echo ${{ secrets.KUBECONFIG }} | base64 --decode > kubeconfig.yaml
+      - name: Set MYSQL Root Secrets
+        uses: azure/k8s-create-secret@v4
+        with:
+           namespace: 'default'
+           secret-name: 'mysql-app-credentials-ga'
+           username: ${{ secrets.mysql_app_username }}
+           password: ${{ secrets.mysql_app_password }}
+      - name: Set MYSQL App Secrets
+        uses: azure/k8s-create-secret@v4
+        with:
+           namespace: 'default'
+           secret-name: 'mysql-root-credentials-ga'
+           username: ${{ secrets.mysql_root_username }}
+           password: ${{ secrets.mysql_root_password }}
+      - name: Deploy
+        run: kubectl apply -f  guestbook-githubactions/main.yml
