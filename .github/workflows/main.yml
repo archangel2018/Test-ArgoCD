@@ -1,0 +1,37 @@
+name: Deploy to EKS
+on:
+  push:
+    branches:
+      - main
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install kubectl
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y apt-transport-https
+          sudo curl -s https://packages.cloud.google.com/apt/doc/apt-key.gpg | sudo apt-key add -
+          sudo echo "deb https://apt.kubernetes.io/ kubernetes-xenial main" | sudo tee -a /etc/apt/sources.list.d/kubernetes.list
+          sudo apt-get update
+          sudo apt-get install -y kubectl
+      - name: Set MYSQL Root Secrets
+        uses: azure/k8s-create-secret@v4
+        with:
+           namespace: 'default'
+           secret-name: 'mysql-app-credentials'
+           username: ${{ secrets.mysql_app_username }}
+           password: ${{ secrets.mysql_app_password }}
+      - name: Set MYSQL App Secrets
+        uses: azure/k8s-create-secret@v4
+        with:
+           namespace: 'default'
+           secret-name: 'mysql-root-credentials'
+           username: ${{ secrets.mysql_root_username }}
+           password: ${{ secrets.mysql_root_password }}
+      - name: Deploy to EKS
+        uses: appleboy/kubectl-action@master
+        with:
+          args: apply -f guestbook-githubactions/main.yml
+          kubeconfig: ${{ secrets.KUBECONFIG }}
